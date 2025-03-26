@@ -3,7 +3,7 @@ import json
 
 class WebSocketClient:
     def __init__(self, uri):
-        """Initialize the WebSocket client with a server URI and Kafka Producer."""
+        """Initialize the WebSocket client with a server URI."""
         self.uri = uri
 
     async def messages(self):
@@ -12,9 +12,11 @@ class WebSocketClient:
             print(f"Connected to socket at {self.uri}")
             try:
                 while True:
-                    # Receive response message from the server
+                    # Await and receive a message from the server
                     response = await websocket.recv()
+                    # Parse the received message
                     json = self.parse_response(response)
+                    # Yield the parsed JSON message
                     yield json
                     
             except Exception as e:
@@ -25,6 +27,6 @@ class WebSocketClient:
         try:
             return json.loads(response)
         except json.JSONDecodeError as err:
-            print(f"Failed to parse response as JSON : {err}")
+            # Print error if JSON parsing fails
+            print(f"Failed to parse response as JSON: {err}")
             return None
-        

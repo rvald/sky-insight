@@ -59,6 +59,7 @@ def create_aggregated_hashtag_counts_sink_postgres(t_env):
 def hashtag_aggregation_job():
      # Set up the execution environment
     env = StreamExecutionEnvironment.get_execution_environment()
+    # Enable checkpointing every 10 seconds
     env.enable_checkpointing(10 * 1000)
     env.set_parallelism(3)
 
@@ -66,15 +67,19 @@ def hashtag_aggregation_job():
     settings = EnvironmentSettings.new_instance().in_streaming_mode().build()
     t_env = StreamTableEnvironment.create(env, environment_settings=settings)
 
+    # Register the UDTF
     t_env.create_temporary_function("parse_hashtag", udtf(ParseHastag(), result_types=[DataTypes.STRING()]))
     
     try:
 
+        # Define the source and sink tables
         source_table_name = create_posts_source_kafka(t_env)
+        # Create a table from the source DDL
         source_table = t_env.from_path(source_table_name)
-
+        # Create the sink table
         sink_table_name = create_aggregated_hashtag_counts_sink_postgres(t_env)
 
+        # Define the DDL for the hashtag aggregation query
         parsed_hashtag_ddl = f""" 
             INSERT INTO {sink_table_name}
             SELECT 
@@ -94,11 +99,12 @@ def hashtag_aggregation_job():
                     LATERAL TABLE(parse_hashtag(coalesce(text, 'empty post'))) AS T(hashtag) ), DESCRIPTOR(event_timestamp), INTERVAL '1' MINUTE ) ) 
                     GROUP BY window_start, window_end, hashtag
         """
-        
+        # Execute the DDL statement
         t_env.execute_sql(parsed_hashtag_ddl)
         
     except Exception as e:
         print("Writing records from Kafka to JDBC failed:", str(e))
     
 if __name__ == "__main__":
+    # Run the hashtag aggregation job
     hashtag_aggregation_job()
