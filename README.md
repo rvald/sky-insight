@@ -1,7 +1,7 @@
 # SKY INSIGHT
 
 ## Overview
-Sky Insight is a data pipeline designed to process and analyze real-time social media posts from the Bluesky network. The project ingests posts via WebSocket, publishes them to a Kafka topic, and performs hashtag aggregation using Apache Flink. Aggregated results are stored in a PostgreSQL database for further analysis.
+Sky Insight is a data pipeline designed to process and analyze real-time social media posts from the Bluesky network. The project ingests posts via WebSocket, publishes them to a Kafka topic, and performs hashtag aggregation using Apache Flink, in order to find the most used hashtags given a time window. Aggregated results are stored in a PostgreSQL database for further analysis.
 
 ## Architecture
 The project consists of the following components:
